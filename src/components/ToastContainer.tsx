@@ -9,7 +9,7 @@ export default function ToastContainer() {
         <div
           key={toast.id}
           className={`px-4 py-3 rounded-lg shadow-lg text-white min-w-[300px] animate-slide-in ${
-            toast.type === 'success' ? 'bg-success' : 'bg-error'
+            toast.type === 'success' ? 'bg-[#10B981]' : 'bg-[#EF4444]'
           }`}
         >
           {toast.message}

@@ -57,8 +57,8 @@ export default function QuoteDetailPage() {
   if (loading) {
     return (
       <Layout showNav>
-        <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB]"></div>
         </div>
       </Layout>
     );
@@ -70,6 +70,7 @@ export default function QuoteDetailPage() {
 
   const lineItems: LineItem[] = quote.line_items || [];
 
+  // Default content if no AI-generated content
   const defaultIncluded = [
     'Professional pressure washing service',
     'Pre-treatment of all surfaces',
@@ -79,13 +80,15 @@ export default function QuoteDetailPage() {
   ];
 
   const defaultPaymentTerms = '50% deposit required to schedule. Balance due upon completion.';
-  const defaultNotes = 'This quote is valid for 30 days. Price may vary based on actual site conditions. We reserve the right to adjust pricing for unexpected circumstances.';
+  const defaultNotes = 'This quote is valid for 30 days. Price may vary based on actual site conditions.';
+  const defaultThankYou = 'Thank you for considering us for your pressure washing needs. We look forward to working with you!';
 
   let includedItems: string[] = defaultIncluded;
   let paymentTerms = defaultPaymentTerms;
   let additionalNotes = defaultNotes;
-  let thankYouMessage = 'Thank you for considering us for your pressure washing needs. We look forward to working with you!';
+  let thankYouMessage = defaultThankYou;
 
+  // Parse generated content if available
   if (quote.generated_content) {
     try {
       const content = JSON.parse(quote.generated_content);
@@ -94,24 +97,30 @@ export default function QuoteDetailPage() {
       if (content.notes) additionalNotes = content.notes;
       if (content.thankYou) thankYouMessage = content.thankYou;
     } catch {
-      // If not JSON, use as plain text for notes
+      // If not JSON, use as plain text
       additionalNotes = quote.generated_content;
     }
   }
 
   return (
     <Layout showNav>
-      <div className="min-h-screen bg-bg-secondary py-8 px-4">
+      <div className="min-h-screen bg-[#F8FAFC] py-8 px-4">
         <div className="max-w-[850px] mx-auto">
           {/* Action Buttons - Hidden on Print */}
           <div className="mb-6 flex gap-4 no-print">
-            <button onClick={handleDownloadPDF} className="inline-flex items-center bg-primary text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               Download PDF
             </button>
-            <Link to="/quote/new" className="inline-flex items-center bg-white text-gray-700 font-semibold px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+            <Link
+              to="/quote/new"
+              className="inline-flex items-center bg-white text-gray-700 font-semibold px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
               Create Another Quote
             </Link>
           </div>
@@ -121,7 +130,7 @@ export default function QuoteDetailPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-6 pb-6 border-b border-gray-200">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">QuoteFlow Services</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{quote.customer_name ? 'QuoteFlow Services' : 'QuoteFlow Services'}</h1>
                 <p className="text-sm text-gray-500 mt-1">{quote.customer_phone}</p>
               </div>
               <div className="text-right">
@@ -134,14 +143,14 @@ export default function QuoteDetailPage() {
             {/* Quote For / Quote Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 pb-6 border-b border-gray-200">
               <div>
-                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Quote For</h3>
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">QUOTE FOR</h3>
                 <p className="font-semibold text-gray-900">{quote.customer_name}</p>
                 <p className="text-sm text-gray-600">{quote.customer_address}</p>
                 <p className="text-sm text-gray-600">{quote.customer_phone}</p>
                 {quote.customer_email && <p className="text-sm text-gray-600">{quote.customer_email}</p>}
               </div>
               <div>
-                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Quote Details</h3>
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">QUOTE DETAILS</h3>
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Valid Until:</span> {formatDate(quote.valid_until)}
                 </p>
@@ -161,7 +170,7 @@ export default function QuoteDetailPage() {
 
             {/* Services and Pricing */}
             <div className="mb-6 pb-6 border-b border-gray-200">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Services and Pricing</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">SERVICES AND PRICING</h3>
 
               {lineItems.length > 0 ? (
                 <table className="w-full">
@@ -195,17 +204,17 @@ export default function QuoteDetailPage() {
               {/* Total */}
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">TOTAL</span>
-                <span className="text-2xl font-bold text-primary">{formatCurrency(quote.total_amount || 0)}</span>
+                <span className="text-2xl font-bold text-[#2563EB]">{formatCurrency(quote.total_amount || 0)}</span>
               </div>
             </div>
 
             {/* What Is Included */}
             <div className="mb-6 pb-6 border-b border-gray-200">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">What Is Included</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">WHAT IS INCLUDED</h3>
               <ul className="space-y-2">
                 {includedItems.map((item, index) => (
                   <li key={index} className="flex items-start text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-success mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     {item}
@@ -216,20 +225,20 @@ export default function QuoteDetailPage() {
 
             {/* Payment Terms */}
             <div className="mb-6 pb-6 border-b border-gray-200">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Payment Terms</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">PAYMENT TERMS</h3>
               <p className="text-sm text-gray-600">{paymentTerms}</p>
             </div>
 
             {/* Notes */}
             <div className="mb-8">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Notes</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">NOTES</h3>
               <p className="text-sm text-gray-600">{additionalNotes}</p>
             </div>
 
             {/* Footer */}
             <div className="text-center pt-6 border-t border-gray-200">
               <p className="font-semibold text-gray-900 mb-2">Thank you for your business!</p>
-              <p className="text-sm text-gray-600">{thankYouMessage}</p>
+              <p className="text-sm text-gray-600 mb-4">{thankYouMessage}</p>
             </div>
           </div>
         </div>

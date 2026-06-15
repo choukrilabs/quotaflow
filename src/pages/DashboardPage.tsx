@@ -37,9 +37,12 @@ export default function DashboardPage() {
 
       setQuotes(quotesData || []);
 
+      // Calculate stats - this month only
       const monthQuotes = (quotesData || []).filter(q => new Date(q.created_at) >= new Date(firstDayOfMonth));
       const totalQuotes = monthQuotes.length;
       const totalRevenue = monthQuotes.reduce((sum, q) => sum + (q.total_amount || 0), 0);
+
+      // All-time accepted quotes
       const acceptedQuotes = (quotesData || []).filter(q => q.status === 'accepted').length;
 
       setStats({ totalQuotes, totalRevenue, acceptedQuotes });
@@ -83,8 +86,8 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <Layout showNav>
-        <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB]"></div>
         </div>
       </Layout>
     );
@@ -92,20 +95,23 @@ export default function DashboardPage() {
 
   const servicesDisplay = (services: string[]) => {
     if (!services || services.length === 0) return '-';
+    if (typeof services === 'string') return services;
     if (services.length <= 2) return services.join(', ');
     return `${services.slice(0, 2).join(', ')} +${services.length - 2} more`;
   };
 
   return (
     <Layout showNav>
-      <div className="min-h-screen bg-bg-secondary py-8 px-4">
+      <div className="min-h-screen bg-[#F8FAFC] py-8 px-4">
         <div className="max-w-6xl mx-auto">
+          {/* Greeting */}
           <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               {getGreeting()}, {profile?.company_name || 'Business Owner'}
             </h1>
           </div>
 
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="text-sm font-medium text-gray-500 mb-1">Total Quotes This Month</div>
@@ -121,10 +127,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Create New Quote Button */}
           <div className="mb-8">
             <Link
               to="/quote/new"
-              className="inline-flex items-center bg-primary text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center bg-[#2563EB] text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -133,6 +140,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
+          {/* Recent Quotes Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Recent Quotes</h2>
@@ -148,7 +156,7 @@ export default function DashboardPage() {
                 <p className="text-gray-600 mb-4">You haven't created any quotes yet.</p>
                 <Link
                   to="/quote/new"
-                  className="inline-block bg-primary text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-block bg-[#2563EB] text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Create Your First Quote
                 </Link>
@@ -181,7 +189,7 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button onClick={() => navigate(`/quote/${quote.id}`)} className="text-primary hover:text-blue-700 font-medium">View</button>
+                          <button onClick={() => navigate(`/quote/${quote.id}`)} className="text-[#2563EB] hover:text-blue-700 font-medium">View</button>
                         </td>
                       </tr>
                     ))}

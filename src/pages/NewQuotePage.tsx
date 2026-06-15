@@ -141,6 +141,7 @@ export default function NewQuotePage() {
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
+      // Scroll to first error
       const firstError = Object.keys(errors)[0];
       const refs: Record<string, React.RefObject<HTMLElement>> = {
         customerFirstName: customerFirstNameRef,
@@ -227,7 +228,6 @@ export default function NewQuotePage() {
         .single();
 
       if (insertError || !quote) {
-        console.error('Insert error:', insertError);
         showToast('Failed to create quote', 'error');
         setLoading(false);
         return;
@@ -235,10 +235,9 @@ export default function NewQuotePage() {
 
       // Get webhook URL from environment
       const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
-      console.log('Webhook URL:', webhookUrl);
 
       if (webhookUrl) {
-        // Prepare the payload
+        // Prepare the payload matching spec exactly
         const payload = {
           quote_id: quote.id,
           quote_number: quoteNumber,
@@ -261,8 +260,6 @@ export default function NewQuotePage() {
           valid_until: validUntil,
         };
 
-        console.log('Sending payload to Make.com:', payload);
-
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -276,14 +273,11 @@ export default function NewQuotePage() {
 
           clearTimeout(timeoutId);
 
-          console.log('Response status:', response.status);
-
           if (response.ok) {
             const data = await response.json();
-            console.log('Response data:', data);
 
             // Update quote with generated content
-            const { error: updateError } = await supabase
+            await supabase
               .from('quotes')
               .update({
                 generated_content: data.generated_content || '',
@@ -293,53 +287,41 @@ export default function NewQuotePage() {
               })
               .eq('id', quote.id);
 
-            if (updateError) {
-              console.error('Update error:', updateError);
-            }
-
             showToast('Quote generated successfully!', 'success');
             navigate(`/quote/${quote.id}`);
           } else {
-            const errorText = await response.text();
-            console.error('Webhook error response:', errorText);
             showToast('Quote generation failed. Please try again.', 'error');
             setLoading(false);
           }
         } catch (webhookError) {
           clearTimeout(timeoutId);
-          console.error('Webhook fetch error:', webhookError);
 
           if (webhookError instanceof Error && webhookError.name === 'AbortError') {
-            showToast('Quote generation timed out. Please try again.', 'error');
+            showToast('Quote generation failed. Please try again.', 'error');
           } else {
             showToast('Quote generation failed. Please try again.', 'error');
           }
           setLoading(false);
         }
       } else {
-        console.warn('No webhook URL configured');
+        // No webhook URL - just navigate to the quote
         showToast('Quote created successfully!', 'success');
         navigate(`/quote/${quote.id}`);
       }
     } catch (error) {
-      console.error('Submit error:', error);
       showToast('Error generating quote. Please try again.', 'error');
       setLoading(false);
     }
   }
 
   function getInputClass(fieldName: keyof FieldErrors): string {
-    const baseClass = 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary';
-    return fieldErrors[fieldName] ? `${baseClass} border-error` : `${baseClass} border-gray-300`;
-  }
-
-  function getSelectClass(fieldName: keyof FieldErrors): string {
-    return getInputClass(fieldName);
+    const baseClass = 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]';
+    return fieldErrors[fieldName] ? `${baseClass} border-[#EF4444]` : `${baseClass} border-gray-300`;
   }
 
   return (
     <Layout showNav>
-      <div className="min-h-screen bg-bg-secondary py-8 px-4">
+      <div className="min-h-screen bg-[#F8FAFC] py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Create New Quote</h1>
 
@@ -347,7 +329,7 @@ export default function NewQuotePage() {
             {/* Loading Overlay */}
             {loading && (
               <div className="fixed inset-0 z-50 bg-white/90 flex flex-col items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563EB] mb-4"></div>
                 <p className="text-xl font-semibold text-gray-900 mb-2">Creating your professional quote</p>
                 <p className="text-gray-600">Please wait while AI generates your pricing and proposal.</p>
               </div>
@@ -359,7 +341,7 @@ export default function NewQuotePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer First Name <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer First Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={customerFirstNameRef}
                     type="text"
@@ -373,7 +355,7 @@ export default function NewQuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Last Name <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Last Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={customerLastNameRef}
                     type="text"
@@ -389,7 +371,7 @@ export default function NewQuotePage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Address <span className="text-error">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Address <span className="text-[#EF4444]">*</span></label>
                 <input
                   ref={customerAddressRef}
                   type="text"
@@ -406,7 +388,7 @@ export default function NewQuotePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Phone <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Phone <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={customerPhoneRef}
                     type="tel"
@@ -425,23 +407,23 @@ export default function NewQuotePage() {
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                   />
                 </div>
               </div>
 
               {/* Services Selection */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Services <span className="text-error">*</span></label>
-                <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 p-2 rounded-lg ${fieldErrors.services ? 'bg-red-50' : ''}`}>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Services <span className="text-[#EF4444]">*</span></label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {SERVICES.map((service) => (
                     <label
                       key={service.id}
-                      className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                      className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
                         selectedServices.includes(service.id)
-                          ? 'border-primary bg-blue-50'
+                          ? 'border-[#2563EB] bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      } ${fieldErrors.services ? 'border-[#EF4444]' : ''}`}
                     >
                       <input
                         type="checkbox"
@@ -449,8 +431,8 @@ export default function NewQuotePage() {
                         onChange={() => toggleService(service.id)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
-                        selectedServices.includes(service.id) ? 'bg-primary border-primary' : 'border-gray-300'
+                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center flex-shrink-0 ${
+                        selectedServices.includes(service.id) ? 'bg-[#2563EB] border-[#2563EB]' : 'border-gray-300'
                       }`}>
                         {selectedServices.includes(service.id) && (
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -466,14 +448,14 @@ export default function NewQuotePage() {
                   ))}
                 </div>
                 {fieldErrors.services && (
-                  <p className="text-sm text-error mt-1">Please select at least one service</p>
+                  <p className="text-sm text-[#EF4444] mt-1">Please select at least one service</p>
                 )}
               </div>
 
               {/* Property Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Size <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Property Size <span className="text-[#EF4444]">*</span></label>
                   <select
                     ref={propertySizeRef}
                     value={propertySize}
@@ -481,7 +463,7 @@ export default function NewQuotePage() {
                       setPropertySize(e.target.value);
                       if (fieldErrors.propertySize) setFieldErrors((prev) => ({ ...prev, propertySize: false }));
                     }}
-                    className={getSelectClass('propertySize')}
+                    className={getInputClass('propertySize')}
                     required
                   >
                     <option value="">Select property size</option>
@@ -491,7 +473,7 @@ export default function NewQuotePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of Stories <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of Stories <span className="text-[#EF4444]">*</span></label>
                   <select
                     ref={storiesRef}
                     value={stories}
@@ -499,7 +481,7 @@ export default function NewQuotePage() {
                       setStories(e.target.value);
                       if (fieldErrors.stories) setFieldErrors((prev) => ({ ...prev, stories: false }));
                     }}
-                    className={getSelectClass('stories')}
+                    className={getInputClass('stories')}
                     required
                   >
                     <option value="">Select number of stories</option>
@@ -512,13 +494,13 @@ export default function NewQuotePage() {
 
               {/* Surface Condition */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Surface Condition <span className="text-error">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Surface Condition <span className="text-[#EF4444]">*</span></label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {SURFACE_CONDITIONS.map((condition) => (
                     <label
                       key={condition.id}
                       className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                        surfaceCondition === condition.id ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        surfaceCondition === condition.id ? 'border-[#2563EB] bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <input
@@ -529,7 +511,7 @@ export default function NewQuotePage() {
                         onChange={(e) => setSurfaceCondition(e.target.value)}
                         className="sr-only"
                       />
-                      <div className={`w-3 h-3 rounded-full ${condition.color} mr-3`}></div>
+                      <div className={`w-3 h-3 rounded-full ${condition.color} mr-3 flex-shrink-0`}></div>
                       <div>
                         <div className="font-medium text-gray-900">{condition.label}</div>
                         <div className="text-sm text-gray-500">{condition.description}</div>
@@ -541,13 +523,13 @@ export default function NewQuotePage() {
 
               {/* Access Difficulty */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Access Difficulty <span className="text-error">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Access Difficulty <span className="text-[#EF4444]">*</span></label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {ACCESS_DIFFICULTY.map((access) => (
                     <label
                       key={access.id}
                       className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
-                        accessDifficulty === access.id ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        accessDifficulty === access.id ? 'border-[#2563EB] bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <input
@@ -558,8 +540,8 @@ export default function NewQuotePage() {
                         onChange={(e) => setAccessDifficulty(e.target.value)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
-                        accessDifficulty === access.id ? 'bg-primary border-primary' : 'border-gray-300'
+                      <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center flex-shrink-0 ${
+                        accessDifficulty === access.id ? 'bg-[#2563EB] border-[#2563EB]' : 'border-gray-300'
                       }`}>
                         {accessDifficulty === access.id && <div className="w-2 h-2 rounded-full bg-white"></div>}
                       </div>
@@ -580,7 +562,7 @@ export default function NewQuotePage() {
                   onChange={(e) => setSpecialNotes(e.target.value)}
                   rows={3}
                   placeholder="Add any details that will affect the quote such as pet gates, fragile surfaces, specific stains, or customer requests."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                 />
               </div>
             </div>
@@ -594,7 +576,7 @@ export default function NewQuotePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={companyNameRef}
                     type="text"
@@ -608,7 +590,7 @@ export default function NewQuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={ownerNameRef}
                     type="text"
@@ -625,7 +607,7 @@ export default function NewQuotePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Phone <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Phone <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={companyPhoneRef}
                     type="tel"
@@ -639,7 +621,7 @@ export default function NewQuotePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Email <span className="text-error">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Email <span className="text-[#EF4444]">*</span></label>
                   <input
                     ref={companyEmailRef}
                     type="email"
@@ -661,7 +643,7 @@ export default function NewQuotePage() {
                     type="text"
                     value={companyWebsite}
                     onChange={(e) => setCompanyWebsite(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                   />
                 </div>
                 <div>
@@ -670,7 +652,7 @@ export default function NewQuotePage() {
                     type="text"
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                   />
                 </div>
               </div>
@@ -696,7 +678,7 @@ export default function NewQuotePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary text-white font-semibold py-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-[#2563EB] text-white font-semibold py-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />

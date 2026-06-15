@@ -17,7 +17,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/dashboard" className="text-xl font-bold text-primary">
+            <Link to="/dashboard" className="text-xl font-bold text-[#2563EB]">
               QuoteFlow
             </Link>
           </div>
@@ -26,19 +26,19 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               to="/dashboard"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-[#2563EB] transition-colors"
             >
               Dashboard
             </Link>
             <Link
               to="/quote/new"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-[#2563EB] transition-colors"
             >
               New Quote
             </Link>
             <Link
               to="/settings"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-[#2563EB] transition-colors"
             >
               Settings
             </Link>
@@ -54,7 +54,7 @@ export default function Navigation() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gray-600 hover:text-primary p-2"
+              className="text-gray-600 hover:text-[#2563EB] p-2"
             >
               {menuOpen ? (
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,28 +75,28 @@ export default function Navigation() {
             <div className="flex flex-col space-y-3">
               <Link
                 to="/dashboard"
-                className="text-gray-600 hover:text-primary px-2 py-2"
+                className="text-gray-600 hover:text-[#2563EB] px-2 py-2"
                 onClick={() => setMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link
                 to="/quote/new"
-                className="text-gray-600 hover:text-primary px-2 py-2"
+                className="text-gray-600 hover:text-[#2563EB] px-2 py-2"
                 onClick={() => setMenuOpen(false)}
               >
                 New Quote
               </Link>
               <Link
                 to="/settings"
-                className="text-gray-600 hover:text-primary px-2 py-2"
+                className="text-gray-600 hover:text-[#2563EB] px-2 py-2"
                 onClick={() => setMenuOpen(false)}
               >
                 Settings
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-left text-gray-600 hover:text-primary px-2 py-2"
+                className="text-left text-gray-600 hover:text-[#2563EB] px-2 py-2"
               >
                 Sign Out
               </button>

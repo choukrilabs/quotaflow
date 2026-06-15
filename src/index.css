@@ -25,48 +25,63 @@
   }
 }
 
+/* Print Styles */
 @media print {
+  /* Hide navigation and non-print elements */
   .no-print {
     display: none !important;
   }
 
+  /* Reset body styling */
   body {
     background: white !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
+  /* Show print-only elements */
   .print-only {
     display: block !important;
   }
 
+  /* Hide the nav */
   nav {
     display: none !important;
   }
 
+  /* Reset main padding */
   main {
     padding: 0 !important;
   }
 
-  .bg-bg-secondary {
+  /* Style the quote document for print */
+  .bg-\[\#F8FAFC\] {
     background: white !important;
     padding: 0 !important;
   }
 
+  /* Hide buttons in print */
   button {
     display: none !important;
   }
 
+  /* Page setup for A4 */
   @page {
-    margin: 1in;
+    margin: 0.75in;
     size: A4;
   }
 
+  /* Prevent page breaks inside tables */
   table {
     page-break-inside: avoid;
   }
 
   tr {
     page-break-inside: avoid;
+  }
+
+  /* Prevent page breaks inside important sections */
+  h1, h2, h3 {
+    page-break-after: avoid;
   }
 }
