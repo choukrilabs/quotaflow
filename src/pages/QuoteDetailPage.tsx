@@ -79,7 +79,7 @@ export default function QuoteDetailPage() {
   ];
 
   const defaultPaymentTerms = '50% deposit required to schedule. Balance due upon completion.';
-  const defaultNotes = 'This quote is valid for 30 days. Price may vary based on actual site conditions.';
+  const defaultNotes = 'This quote is valid for 30 days. Price may vary based on actual site conditions. We reserve the right to adjust pricing for unexpected circumstances.';
 
   let includedItems: string[] = defaultIncluded;
   let paymentTerms = defaultPaymentTerms;
@@ -94,6 +94,7 @@ export default function QuoteDetailPage() {
       if (content.notes) additionalNotes = content.notes;
       if (content.thankYou) thankYouMessage = content.thankYou;
     } catch {
+      // If not JSON, use as plain text for notes
       additionalNotes = quote.generated_content;
     }
   }
@@ -102,6 +103,7 @@ export default function QuoteDetailPage() {
     <Layout showNav>
       <div className="min-h-screen bg-bg-secondary py-8 px-4">
         <div className="max-w-[850px] mx-auto">
+          {/* Action Buttons - Hidden on Print */}
           <div className="mb-6 flex gap-4 no-print">
             <button onClick={handleDownloadPDF} className="inline-flex items-center bg-primary text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,7 +116,9 @@ export default function QuoteDetailPage() {
             </Link>
           </div>
 
+          {/* Quote Document */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 md:p-12 max-w-[800px] print:shadow-none print:border-none">
+            {/* Header */}
             <div className="flex justify-between items-start mb-6 pb-6 border-b border-gray-200">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">QuoteFlow Services</h1>
@@ -127,6 +131,7 @@ export default function QuoteDetailPage() {
               </div>
             </div>
 
+            {/* Quote For / Quote Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 pb-6 border-b border-gray-200">
               <div>
                 <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Quote For</h3>
@@ -137,16 +142,24 @@ export default function QuoteDetailPage() {
               </div>
               <div>
                 <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Quote Details</h3>
-                <p className="text-sm text-gray-600"><span className="font-medium">Valid Until:</span> {formatDate(quote.valid_until)}</p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Valid Until:</span> {formatDate(quote.valid_until)}
+                </p>
                 <p className="text-sm text-gray-600 mt-1">
                   <span className="font-medium">Status:</span>{' '}
-                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${quote.status === 'accepted' ? 'bg-green-100 text-green-700' : quote.status === 'sent' ? 'bg-blue-100 text-blue-700' : quote.status === 'declined' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                    quote.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                    quote.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                    quote.status === 'declined' ? 'bg-red-100 text-red-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
                     {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
                   </span>
                 </p>
               </div>
             </div>
 
+            {/* Services and Pricing */}
             <div className="mb-6 pb-6 border-b border-gray-200">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Services and Pricing</h3>
 
@@ -172,17 +185,21 @@ export default function QuoteDetailPage() {
               ) : (
                 <div className="bg-gray-50 rounded-lg p-4">
                   {quote.services.map((service, index) => (
-                    <div key={index} className="py-2 text-sm text-gray-600">{service}</div>
+                    <div key={index} className="py-2 text-sm text-gray-600">
+                      {service}
+                    </div>
                   ))}
                 </div>
               )}
 
+              {/* Total */}
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">TOTAL</span>
                 <span className="text-2xl font-bold text-primary">{formatCurrency(quote.total_amount || 0)}</span>
               </div>
             </div>
 
+            {/* What Is Included */}
             <div className="mb-6 pb-6 border-b border-gray-200">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">What Is Included</h3>
               <ul className="space-y-2">
@@ -197,16 +214,19 @@ export default function QuoteDetailPage() {
               </ul>
             </div>
 
+            {/* Payment Terms */}
             <div className="mb-6 pb-6 border-b border-gray-200">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Payment Terms</h3>
               <p className="text-sm text-gray-600">{paymentTerms}</p>
             </div>
 
+            {/* Notes */}
             <div className="mb-8">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Notes</h3>
               <p className="text-sm text-gray-600">{additionalNotes}</p>
             </div>
 
+            {/* Footer */}
             <div className="text-center pt-6 border-t border-gray-200">
               <p className="font-semibold text-gray-900 mb-2">Thank you for your business!</p>
               <p className="text-sm text-gray-600">{thankYouMessage}</p>
