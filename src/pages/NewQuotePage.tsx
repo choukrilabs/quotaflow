@@ -236,6 +236,12 @@ export default function NewQuotePage() {
       // Get webhook URL from environment
       const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
 
+      console.log('=== WEBHOOK DEBUG ===');
+      console.log('Webhook URL:', webhookUrl);
+      console.log('Webhook URL type:', typeof webhookUrl);
+      console.log('Webhook URL is truthy:', !!webhookUrl);
+      console.log('All env vars:', import.meta.env);
+
       if (webhookUrl) {
         // Prepare the payload matching spec exactly
         const payload = {
@@ -263,6 +269,9 @@ export default function NewQuotePage() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+        console.log('Sending webhook to:', webhookUrl);
+        console.log('Payload:', JSON.stringify(payload, null, 2));
+
         try {
           const response = await fetch(webhookUrl, {
             method: 'POST',
@@ -273,11 +282,15 @@ export default function NewQuotePage() {
 
           clearTimeout(timeoutId);
 
+          console.log('Response status:', response.status);
+          console.log('Response OK:', response.ok);
+
           if (response.ok) {
             const data = await response.json();
+            console.log('Response data:', data);
 
             // Update quote with generated content
-            await supabase
+            const { error: updateError } = await supabase
               .from('quotes')
               .update({
                 generated_content: data.generated_content || '',
@@ -287,25 +300,33 @@ export default function NewQuotePage() {
               })
               .eq('id', quote.id);
 
+            if (updateError) {
+              console.error('Update error:', updateError);
+            }
+
             showToast('Quote generated successfully!', 'success');
             navigate(`/quote/${quote.id}`);
           } else {
+            const errorText = await response.text();
+            console.error('Webhook error response:', errorText);
             showToast('Quote generation failed. Please try again.', 'error');
             setLoading(false);
           }
         } catch (webhookError) {
           clearTimeout(timeoutId);
+          console.error('Webhook fetch error:', webhookError);
 
           if (webhookError instanceof Error && webhookError.name === 'AbortError') {
-            showToast('Quote generation failed. Please try again.', 'error');
+            showToast('Quote generation timed out. Please try again.', 'error');
           } else {
-            showToast('Quote generation failed. Please try again.', 'error');
+            showToast('Network error. Please check your connection.', 'error');
           }
           setLoading(false);
         }
       } else {
-        // No webhook URL - just navigate to the quote
-        showToast('Quote created successfully!', 'success');
+        // No webhook URL configured
+        console.warn('No webhook URL found in environment variables');
+        showToast('Quote created (no webhook configured)', 'success');
         navigate(`/quote/${quote.id}`);
       }
     } catch (error) {
