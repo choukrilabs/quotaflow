@@ -7,7 +7,7 @@ import Layout from '../components/Layout';
 
 const SERVICES = [
   { id: 'house_washing', name: 'House Washing', priceRange: '$150 - $400' },
-  { id: 'driveway_cleaning', name: 'Driv Cleaning', priceRange: '$80 - $200' },
+  { id: 'driveway_cleaning', name: 'Driveway Cleaning', priceRange: '$80 - $200' },
   { id: 'roof_cleaning', name: 'Roof Cleaning', priceRange: '$300 - $600' },
   { id: 'deck_patio_cleaning', name: 'Deck and Patio Cleaning', priceRange: '$100 - $300' },
   { id: 'fence_cleaning', name: 'Fence Cleaning', priceRange: '$80 - $200' },
@@ -141,7 +141,6 @@ export default function NewQuotePage() {
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      // Scroll to first error
       const firstError = Object.keys(errors)[0];
       const refs: Record<string, React.RefObject<HTMLElement>> = {
         customerFirstName: customerFirstNameRef,
@@ -205,7 +204,7 @@ export default function NewQuotePage() {
         return service?.name || id;
       });
 
-      // Save quote to database
+      // Save quote to database first
       const { data: quote, error: insertError } = await supabase
         .from('quotes')
         .insert({
@@ -228,15 +227,42 @@ export default function NewQuotePage() {
         .single();
 
       if (insertError || !quote) {
+        console.error('Insert error:', insertError);
         showToast('Failed to create quote', 'error');
         setLoading(false);
         return;
       }
 
-      // Send webhook to Make.com with 30 second timeout
+      // Get webhook URL from environment
       const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
+      console.log('Webhook URL:', webhookUrl);
 
       if (webhookUrl) {
+        // Prepare the payload
+        const payload = {
+          quote_id: quote.id,
+          quote_number: quoteNumber,
+          customer_name: `${customerFirstName} ${customerLastName}`,
+          customer_address: customerAddress,
+          customer_phone: customerPhone,
+          customer_email: customerEmail || '',
+          services: serviceNames,
+          property_size: PROPERTY_SIZES.find((s) => s.id === propertySize)?.label || propertySize,
+          stories: STORIES.find((s) => s.id === stories)?.label || stories,
+          surface_condition: SURFACE_CONDITIONS.find((s) => s.id === surfaceCondition)?.label || surfaceCondition,
+          access_difficulty: ACCESS_DIFFICULTY.find((a) => a.id === accessDifficulty)?.label || accessDifficulty,
+          special_notes: specialNotes || '',
+          company_name: companyName,
+          owner_name: ownerName,
+          company_phone: companyPhone,
+          company_email: companyEmail,
+          company_website: companyWebsite || '',
+          license_number: licenseNumber || '',
+          valid_until: validUntil,
+        };
+
+        console.log('Sending payload to Make.com:', payload);
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -245,36 +271,19 @@ export default function NewQuotePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
-            body: JSON.stringify({
-              quote_id: quote.id,
-              quote_number: quoteNumber,
-              customer_name: `${customerFirstName} ${customerLastName}`,
-              customer_address: customerAddress,
-              customer_phone: customerPhone,
-              customer_email: customerEmail || '',
-              services: serviceNames,
-              property_size: PROPERTY_SIZES.find((s) => s.id === propertySize)?.label || propertySize,
-              stories: STORIES.find((s) => s.id === stories)?.label || stories,
-              surface_condition: SURFACE_CONDITIONS.find((s) => s.id === surfaceCondition)?.label || surfaceCondition,
-              access_difficulty: ACCESS_DIFFICULTY.find((a) => a.id === accessDifficulty)?.label || accessDifficulty,
-              special_notes: specialNotes || '',
-              company_name: companyName,
-              owner_name: ownerName,
-              company_phone: companyPhone,
-              company_email: companyEmail,
-              company_website: companyWebsite || '',
-              license_number: licenseNumber || '',
-              valid_until: validUntil,
-            }),
+            body: JSON.stringify(payload),
           });
 
           clearTimeout(timeoutId);
 
+          console.log('Response status:', response.status);
+
           if (response.ok) {
             const data = await response.json();
+            console.log('Response data:', data);
 
             // Update quote with generated content
-            await supabase
+            const { error: updateError } = await supabase
               .from('quotes')
               .update({
                 generated_content: data.generated_content || '',
@@ -284,27 +293,36 @@ export default function NewQuotePage() {
               })
               .eq('id', quote.id);
 
+            if (updateError) {
+              console.error('Update error:', updateError);
+            }
+
             showToast('Quote generated successfully!', 'success');
             navigate(`/quote/${quote.id}`);
           } else {
-            throw new Error('Webhook response not OK');
+            const errorText = await response.text();
+            console.error('Webhook error response:', errorText);
+            showToast('Quote generation failed. Please try again.', 'error');
+            setLoading(false);
           }
         } catch (webhookError) {
           clearTimeout(timeoutId);
+          console.error('Webhook fetch error:', webhookError);
 
           if (webhookError instanceof Error && webhookError.name === 'AbortError') {
-            showToast('Quote generation failed. Please try again.', 'error');
+            showToast('Quote generation timed out. Please try again.', 'error');
           } else {
             showToast('Quote generation failed. Please try again.', 'error');
           }
           setLoading(false);
         }
       } else {
-        // No webhook URL - just navigate to the quote
+        console.warn('No webhook URL configured');
         showToast('Quote created successfully!', 'success');
         navigate(`/quote/${quote.id}`);
       }
     } catch (error) {
+      console.error('Submit error:', error);
       showToast('Error generating quote. Please try again.', 'error');
       setLoading(false);
     }
@@ -316,8 +334,7 @@ export default function NewQuotePage() {
   }
 
   function getSelectClass(fieldName: keyof FieldErrors): string {
-    const baseClass = 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary';
-    return fieldErrors[fieldName] ? `${baseClass} border-error` : `${baseClass} border-gray-300`;
+    return getInputClass(fieldName);
   }
 
   return (
