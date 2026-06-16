@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { supabase } from '../lib/supabase';
@@ -12,10 +12,6 @@ export default function AuthPage() {
   const { signUp, signIn } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Get the intended destination from location state, default to /dashboard
-  const from = (location.state as { from?: string })?.from || '/dashboard';
 
   // Sign Up fields
   const [companyName, setCompanyName] = useState('');
@@ -69,7 +65,7 @@ export default function AuthPage() {
         });
       }
       showToast('Account created successfully!', 'success');
-      navigate(from, { replace: true });
+      navigate('/dashboard');
     }
   }
 
@@ -90,7 +86,7 @@ export default function AuthPage() {
     if (error) {
       showToast(error.message, 'error');
     } else {
-      navigate(from, { replace: true });
+      navigate('/dashboard');
     }
   }
 
