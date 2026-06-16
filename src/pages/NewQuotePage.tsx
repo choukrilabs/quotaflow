@@ -233,14 +233,18 @@ export default function NewQuotePage() {
         return;
       }
 
-      // Get webhook URL from environment
-      const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
+      // Get webhook URL from environment (fallback to hardcoded for debugging)
+      let webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL;
+
+      // Fallback for debugging - remove after confirming it works
+      if (!webhookUrl) {
+        webhookUrl = 'https://hook.eu2.make.com/cjlckrx5bm3153563wyny3crkwiwniar';
+      }
 
       console.log('=== WEBHOOK DEBUG ===');
       console.log('Webhook URL:', webhookUrl);
       console.log('Webhook URL type:', typeof webhookUrl);
       console.log('Webhook URL is truthy:', !!webhookUrl);
-      console.log('All env vars:', import.meta.env);
 
       if (webhookUrl) {
         // Prepare the payload matching spec exactly
